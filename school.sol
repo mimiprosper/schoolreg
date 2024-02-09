@@ -1,74 +1,84 @@
-//SPDX-License-Identifier: UNLICENSED
-pragma solidity "0.8.19";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-contract StudentRegister {
+// School Registration, a CRUD operation
+contract StudentRegistry {
     address public owner;
 
-    mapping(address => student) students;
+    // Student Structure
+    struct Student {
+        string name;
+        uint age;
+        string rollNumber;
+        bool exists;
+    }
+
+    mapping(address => Student) public students;
+
+    // only priciple can perform this action
+    modifier principle() {
+        require(msg.sender == owner, "Only owner can perform this action");
+        _;
+    }
 
     constructor() {
         owner = msg.sender;
     }
 
-    modifier principle() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    struct student {
-        address studentId;
-        string name;
-        string course;
-        uint256 mark1;
-        uint256 mark2;
-        uint256 mark3;
-        uint256 totalMarks;
-        uint256 percentage;
-        bool isExist;
-    }
-
-    function register(
-        address studentId,
-        string memory name,
-        string memory course,
-        uint256 mark1,
-        uint256 mark2,
-        uint256 mark3
+    // Student Registration Records
+    function registerStudent(
+        address _studentAddress,
+        string memory _name,
+        uint _age,
+        string memory _rollNumber
     ) public principle {
         require(
-            students[studentId].isExist == false,
-            "ha.. ha... Fraud Not Possible,student details already registered and cannot be altered"
+            !students[_studentAddress].exists,
+            "Student already registered"
         );
 
-        uint256 totalMarks;
-        uint256 percentage;
+        Student memory newStudent = Student({
+            name: _name,
+            age: _age,
+            rollNumber: _rollNumber,
+            exists: true
+        });
 
-        students[studentId] = student(
-            studentId,
-            name,
-            course,
-            mark1,
-            mark2,
-            mark3,
-            totalMarks,
-            percentage,
-            true
-        );
+        students[_studentAddress] = newStudent;
     }
 
-    function getStudentDetails(
-        address studentId
-    )
-        public
-        view
-        returns (address, string memory, string memory, uint256, uint256)
-    {
+    // Student Update Records
+    function updateStudent(
+        address _studentAddress,
+        string memory _name,
+        uint _age,
+        string memory _rollNumber
+    ) public principle {
+        require(students[_studentAddress].exists, "Student not registered");
+
+        students[_studentAddress].name = _name;
+        students[_studentAddress].age = _age;
+        students[_studentAddress].rollNumber = _rollNumber;
+    }
+
+    // Student Deletion Records
+    function deleteStudent(address _studentAddress) public principle {
+        require(students[_studentAddress].exists, "Student not registered");
+
+        delete students[_studentAddress];
+    }
+
+    // Get Student Details
+    function getStudent(
+        address _studentAddress
+    ) public view returns (string memory, uint, string memory) {
+        require(students[_studentAddress].exists, "Student not registered");
+
         return (
-            students[studentId].studentId,
-            students[studentId].name,
-            students[studentId].course,
-            students[studentId].totalMarks,
-            students[studentId].percentage
+            students[_studentAddress].name,
+            students[_studentAddress].age,
+            students[_studentAddress].rollNumber
         );
     }
+
 }
